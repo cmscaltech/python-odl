@@ -31,6 +31,15 @@
 
        </ethernet-match>
 
+       {% if ingress_vlan %}
+           <vlan-match>
+               <vlan-id>
+                   <vlan-id>{{ ingress_vlan }}</vlan-id>
+                   <vlan-id-present>true</vlan-id-present>
+               </vlan-id>
+           </vlan-match>
+       {% endif %}
+       <in-port>{{ in_port }}</in-port>
     </match>
 
     <instructions>
@@ -39,6 +48,31 @@
             <apply-actions>
                 <action>
                     <order>0</order>
+            {% if ingress_vlan %}
+                    <pop-vlan-action/>
+                </action>
+                <action>
+                    <order>1</order>
+            {% endif %}
+            {% if egress_vlan %}
+                    <push-vlan-action>
+                      <ethernet-type>33024</ethernet-type>
+                    </push-vlan-action>
+                </action>
+                <action>
+                    <order>1</order>
+                    <set-field>
+                        <vlan-match>
+                            <vlan-id>
+                                <vlan-id>{{ egress_vlan }}</vlan-id>
+                                <vlan-id-present>true</vlan-id-present>
+                            </vlan-id>
+                        </vlan-match>
+                    </set-field>
+                </action>
+                <action>
+                    <order>2</order>
+            {% endif %}
                     <output-action>
                         <output-node-connector>{{ connector.port_number }}</output-node-connector>
                     </output-action>

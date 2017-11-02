@@ -21,6 +21,7 @@
 
 from odl.connector import ODLConnector
 from odl.table import ODLTable
+from odl.meter import ODLMeter
 from odl.exceptions import TableNotFound, ConnectorNotFound
 
 class ODLNode(object):
@@ -86,7 +87,7 @@ class ODLNode(object):
                 'ip_address': self.ip_address,
                 'manufacturer': self.manufacturer,
                 'hardware': self.hardware,
-                'type': 'switch',
+                'type': 'ovs' if self.hardware == "Open vSwitch" else 'switch',
                 'software': self.software,
                 'tables': { table.id: table.to_dict() for table in tables},
                 'connectors': {conn.id: conn.to_dict() for conn in conns}}
@@ -109,6 +110,20 @@ class ODLNode(object):
         for table in tables:
             obj = ODLTable(table, self)
             result[obj.id] = obj
+        return result
+
+    def get_meter_table(self):
+        """
+        Return a dict with all meters of this node.
+        """
+        try:
+            meter_table = self.xml['flow-node-inventory:meter']
+        except KeyError:
+            return {}
+        result = {}
+        for meter in meter_table:
+            obj = ODLMeter(meter, self)
+            result[obj.id] = obj.meter_drop_info
         return result
 
     def get_table_by_id(self, id):
